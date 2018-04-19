@@ -1,0 +1,16 @@
+#!/bin/bash 
+
+EXT0="jpg"
+COUNTER=1
+
+for name0 in `ls *.$EXT0` 
+do 
+
+#name1=`echo $COUNTER.$EXT0`
+printf -v name1 "%03d.%s\n" $COUNTER $EXT0
+echo $name0 $name1
+mv $name0 $name1
+let COUNTER=COUNTER+1
+ 
+done
+
