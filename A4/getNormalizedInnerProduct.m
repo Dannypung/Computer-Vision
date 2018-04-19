@@ -7,7 +7,7 @@ function index = getNormalizedInnerProduct(queryHist, referenceHist, topK)
         a = queryHist*referenceHist(i,:)';
         result(1,i) = double(a/(b*c));
     end
-    [~,index] = sort(result,'desc');
+    [~,index] = sort(result,'descend');
     index = index(1:topK);
     
 end

@@ -27,9 +27,10 @@ for i = 1: nLineToShow
     [sortedDists, sortedIndices] = sort(dist, 'ascend');
     temp(:,1) = [i; sortedIndices(1); sortedDists(1)];
     
+    if(sortedDists(1)/sortedDists(2)<0.8)
      matchMatrix=[matchMatrix temp];
+    end
 
 end
 
 showLinesBetweenMatches(im1,im2,frames1,frames2,matchMatrix)
-

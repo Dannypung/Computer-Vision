@@ -1,5 +1,12 @@
 function H = getHomographyMatrix(points1, points2)
     % function to calculate Homography Matrix
+    % format as following:
+    % points1: [x1 x2 x3 x4;
+    %           y1 y2 y3 y4]
+    % points2: [x1 x2 x3 x4;
+    %           y1 y2 y3 y4]
+    % where points1 are the points in matrix 1
+    % and points2 are the corresponding points in matrix 2
     n = size(points1,2);  
     A = zeros(2*n,9);  
     A(1:2:2*n,1:2) = points1';  
