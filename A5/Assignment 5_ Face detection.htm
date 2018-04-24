@@ -1,0 +1,485 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0065)http://vision.cs.utexas.edu/376-spring2018/assignments/a5/A5.html -->
+<html xmlns="http://www.w3.org/1999/xhtml" class="gr__vision_cs_utexas_edu"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>Assignment 5: Face detection</title>
+    <link href="./Assignment 5_ Face detection_files/style.css" rel="stylesheet" type="text/css">
+    <style type="text/css" media="all">
+#primarycontent {
+    margin-left: auto;  
+    width: expression(document.body.clientWidth > 995? "995px": "auto" );
+    margin-right: auto;
+    text-align: left;
+    max-width: 995px 
+}
+</style>
+  </head>
+  <body vlink="#551A8B" text="#000000" link="#0000EE" bgcolor="#009900" alink="#EE0000" data-gr-c-s-loaded="true">
+    <div id="primarycontent">
+      <center>
+        <div align="left"><b>CS 376 Computer Vision</b><b><br>
+          </b><b>Spring 2018</b><b><br>
+          </b><b><br>
+          </b><b>Assignment 5</b><b><br>
+          </b><b>Out: Monday April 16</b><b><br>
+          </b><b>Due: Tuesday May 1, 11:59 PM</b><br>
+          <br>
+        </div>
+        <p><big><big><b><big>Face detection with a sliding window<br>
+                </big></b></big></big></p>
+        <img src="./Assignment 5_ Face detection_files/top.jpg" alt="face det" width="520" height="394"><br>
+      </center>
+      <div align="center"><br>
+      </div>
+      <h2>Resources</h2>
+      <p> </p>
+      <ul>
+        <li>VL Feat Matlab reference: <a href="http://www.vlfeat.org/matlab/matlab.html">http://www.vlfeat.org/matlab/matlab.html</a>
+        </li>
+        <li>Download the <a href="http://vision.cs.utexas.edu/376-spring2018/assignments/a5/a5.tar.gz">provided
+
+
+
+            materials </a>(68 MB)</li>
+        <li><font face="Georgia"><code><font face="Georgia">Download the
+              </font><a href="http://vision.cs.utexas.edu/376-spring2018/assignments/a5/extra_test_scenes.tar.gz">provided
+                extra test scenes</a>,<font face="Georgia">the images we
+                took in class (46 MB).</font></code></font><br>
+        </li>
+        <li>Download <a href="http://www.vlfeat.org/download.html">VLFeat
+
+
+
+            0.9.20 binary package</a></li>
+      </ul>
+      <h2>Overview</h2>
+      <img src="./Assignment 5_ Face detection_files/hog_vis.png" alt="HoG" style="float:right;" width="400" height="196">
+      <p> The sliding window model is conceptually simple: independently
+        classify all image patches as being object or non-object.
+        Sliding window classification has long been a dominant paradigm
+        in object detection and for one object category in particular --
+        faces -- it is one of the most noticeable successes of computer
+        vision for category-level detection. For example, modern cameras
+        and photo organization tools have prominent face detection
+        capabilities. These success of face detection (and object
+        detection in general) can be traced back to influential works
+        such as <a href="https://www.ri.cmu.edu/pub_files/pub1/rowley_henry_1996_3/rowley_henry_1996_3.pdf">Rowley
+
+
+
+          et al. 1996</a> and <a href="https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/viola-cvpr-01.pdf">Viola-Jones
+
+
+
+          2001</a>, and forward to recent successes with convolutional
+        neural networks for object detection like <a href="https://arxiv.org/abs/1506.01497">Faster R-CNN</a>.&nbsp;
+        You can look at these papers for suggestions on how to implement
+        your detector. However, for this project you will be
+        implementing the simpler (but still very effective!) sliding
+        window detector of <a href="http://www.csd.uwo.ca/~olga/Courses/Fall2009/9840/Papers/DalalTriggsCVPR05.pdf">Dalal
+
+
+
+          and Triggs 2005</a>. Dalal-Triggs focuses on representation
+        more than learning and introduces the SIFT-like Histogram of
+        Gradients (HoG) representation (pictured to the right). You will
+        not be asked to implement HoG. You will be responsible for the
+        rest of the detection pipeline -- handling heterogeneous
+        training and testing data, training a linear classifier, and
+        using your classifier to classify millions of sliding windows at
+        multiple scales. Fortunately, linear classifiers are compact,
+        fast to train, and fast to execute. A linear SVM can also be
+        trained on large amounts of data, including mined hard
+        negatives.<br>
+        <br>
+      </p>
+      <h2>Details and Starter Code</h2>
+      <p> The following is an outline of the stencil code (see links for
+        provided code and VLFeats library download above): </p>
+      <ul>
+        <li><code><font color="green">proj4.m</font></code>. The top
+          level script for training and testing your object detector. If
+          you run the code unmodified, it will predict random faces in
+          the test images. It calls the following functions, many of
+          which are simply placeholders in the starter code:</li>
+        <li><code><font color="green">get_positive_features.m</font> </code>
+          (<font color="darkturqoise">you code this</font>). Load
+          cropped positive trained examples (faces) and convert them to
+          HoG features with a call to <code>vl_hog</code>.</li>
+        <li><code><font color="green">get_random_negative_features.m</font></code>
+          (<font color="darkturqoise">you code this</font>). Sample
+          random negative examples from scenes which contain no faces
+          and convert them to HoG features.</li>
+        <li><code><font color="green">classifier training</font></code>
+          (<font color="darkturqoise">you code this</font>). Train a
+          linear classifier from the positive and negative examples with
+          a call to <code>vl_trainsvm</code>.</li>
+        <li><code><font color="green">run_detector.m</font></code> (<font color="darkturqoise">you code this</font>). Run the
+          classifier on the test set. For each image, run the classifier
+          at multiple scales and then call <code>non_max_supr_bbox</code>
+          to remove duplicate detections.</li>
+        <li><code><font color="green">evaluate_detections.m</font></code>.
+          Compute ROC curve, precision-recall curve, and average
+          precision. You're not allowed to change this function.</li>
+        <li><code><font color="green">visualize_detections_by_image.m</font></code>.
+          Visualize detections in each image. You can use <code>visualize_detections_by_image_no_gt.m</code>
+          for test cases which have no ground truth annotations (e.g.
+          the class photos).</li>
+      </ul>
+      <p></p>
+      <p> Creating the sliding window, multiscale detector is the most
+        complex part of this project. It is recommended that you start
+        with a <i>single scale</i> detector which does not detect faces
+        at multiple scales in each test image. Such a detector will not
+        work nearly as well (perhaps 0.3 average precision) compared to
+        the full multi-scale detector. With a well trained multi-scale
+        detector with small step size you can expect to match the papers
+        linked above in performance with average precision above 0.9.<br>
+        <br>
+      </p>
+      <h2>Data</h2>
+      <p> The choice of training data is critical for this task.&nbsp;
+        Face detection methods have traditionally trained on
+        heterogeneous, even proprietary, datasets. As with most of the
+        literature, we will use three databases: (1) positive training
+        crops, (2) non-face scenes to mine for negative training data,
+        and (3) test scenes with ground truth face locations. </p>
+      <p>You are provided with a positive training database of 6,713
+        cropped 36x36 faces from the <a href="http://www.vision.caltech.edu/Image_Datasets/Caltech_10K_WebFaces/">Caltech
+
+
+
+          Web Faces project</a>. This subset has already filtered away
+        faces which were not high enough resolution, upright, or front
+        facing. There are many additional databases available For
+        example, see Figure 3 in <a href="http://vis-www.cs.umass.edu/lfw/lfw.pdf">Huang et al.</a>
+        and the <a href="http://vis-www.cs.umass.edu/lfw/">LFW database</a>
+        described in the paper. You are free to experiment with
+        additional or alternative training data for extra credit. </p>
+      <p> Non-face scenes, the second source of your training data, are
+        easy to collect. You are provided with a small database of such
+        scenes from the <a href="http://groups.csail.mit.edu/vision/SUN/">SUN scene
+          database</a>. You can add more non-face training scenes,
+        although you are unlikely to need more negative training data
+        unless you are doing hard negative mining for extra credit. </p>
+      <p>A benchmark for face detection is the CMU+MIT test set. This
+        test set contains 130 images with 511 faces. The test set is
+        challenging because the images are highly compressed and
+        quantized. Some of the faces are illustrated faces, not human
+        faces. For this project, we have converted the test set's ground
+        truth landmark points in to bounding boxes. We have inflated
+        these bounding boxes to cover most of the head, as the provided
+        training data does. For this reason, you are arguably training a
+        "head detector" not a "face detector" for this project. </p>
+      <p> Copies of these data sets are provided with your starter code
+        linked above in Resources.&nbsp;&nbsp;<b><font color="#990000">
+            Please do <i>not</i> include them in your submission on
+            Canvas</font></b>.<br>
+        <br>
+      </p>
+      <h2>Write up</h2>
+      <p> In the report, please include the following: <br>
+      </p>
+      <ul>
+        <li>Describe your algorithm and any decisions you made to write
+          your algorithm a particular way. <br>
+        </li>
+        <li>Show and discuss the results of your algorithm. <br>
+        </li>
+        <li>Discuss any extra credit you did, and clearly show what
+          contribution it had on the results (e.g. performance with and
+          without each extra credit component).</li>
+        <li>Show how your detector performs on additional imag<code></code>es
+          in the <a href="http://vision.cs.utexas.edu/376-spring2018/assignments/a5/extra_test_scenes.tar.gz"><code>extra_test_scenes</code></a>
+          directory (separate gzip file posted 4/19/18).&nbsp; <br>
+        </li>
+        <li>Include the precision-recall curve and AP of your final
+          classifier and any interesting variants of your algorithm.</li>
+      </ul>
+      <h2><br>
+      </h2>
+      <h2>Face detection contest</h2>
+      <br>
+      There will be extra credit and recognition for the
+      five students who achieve the highest five average precision
+      values, whether with the baseline classifier or any bells and
+      whistles from the extra credit.&nbsp;&nbsp; You aren't allowed to
+      modify <code>evaluate_all_detections.m</code> which measures your
+      accuracy.<br>
+      <br>
+      <h2><br>
+      </h2>
+      <h2>Extra Credit</h2>
+      <p> For all extra credit, be sure to analyze in your report cases
+        where your extra credit implementation has improved
+        classification accuracy. Each item is "up to" some amount of
+        points because trivial implementations may not be worthy of full
+        extra credit.&nbsp; <font color="#cc0000">A maximum of 15 extra
+          credit points are allowable.</font><br>
+        <br>
+        Some ideas:</p>
+      <ul>
+        <li>up to 5 pts: Implement hard negative mining, as discussed in
+          the <a href="http://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf">Dalal
+
+
+
+            and Triggs paper</a>, and demonstrate the effect on
+          performance. </li>
+        <li>up to 10 pts: Implement a cascade architecture as in <a href="https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/viola-cvpr-01.pdf">Viola-Jones</a>.
+          Show the effect that this has on accuracy and run speed.
+          Describe your cascade building process in detail in your
+          handout. Unfortunately, with the current starter code this is
+          unlikely to improve run speed because the run time is
+          dominated by image and feature manipulations, not the already
+          fast linear classifier.</li>
+        <li>up to 10 pts: Detect additional object categories. You'll
+          need to get your own training and testing data. One suggestion
+          is to train and run your detector on the <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC</a>
+          data sets, possibly with the help of their support code. The
+          bounding boxes returned by the stencil code are already in VOC
+          format.</li>
+        <li>up to 5 pts: Find and utilize alternative positive training
+          data to improve results. You can either augment or replace the
+          provided training data.</li>
+        <li>up to 10 pts: Add contextual reasoning to your classifier.
+          For example, one might learn likely locations of faces given
+          scene statistics, in the spirit of <a href="http://web.mit.edu/torralba/www/carsAndFacesInContext.html">Contextual
+
+
+
+            priming for object detection, Torralba</a>. You could try
+          and use typical arrangements of groups of faces as in <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.167.4640&amp;rep=rep1&amp;type=pdf">Understanding
+
+
+
+            Images of Groups of People</a> by Gallagher and Chen.</li>
+        <li>up to 5 pts: Experiment with alternative features or
+          additional features to improve accuracy.<br>
+        </li>
+      </ul>
+      <p> For any of the above, be sure to explain clearly in your
+        report --- with quantitative results wherever relevant --- the
+        outcomes via experiments.<br>
+        <br>
+      </p>
+      <h2> Handing in </h2>
+      <p> Creating a single zip file to submit on Canvas.&nbsp; It
+        should contain the following: </p>
+      <ul>
+        <li> README - text file containing anything about the project
+          that you want to tell the TA</li>
+        <li> code/ - directory containing all your code for this
+          assignment</li>
+        <li> report.pdf - writeup as described above.&nbsp; <br>
+        </li>
+        <ul>
+          <li>Be sure to prominently show your average precision results
+            from <code>evaluate_all_detections.m </code><br>
+            on the test set for the sake of the contest.<br>
+          </li>
+        </ul>
+      </ul>
+      <font color="#cc0000">Do NOT submit the provided data within your
+        zip file</font>.&nbsp; The TA will have a local copy.<br>
+      <ul>
+        <br>
+      </ul>
+      <h2> How grades will be calculated </h2>
+      <ul>
+        <li> +20 pts: Use the training images to create positive and and
+          negative training HoG features. </li>
+        <li> +15 pts: Train linear classifier. </li>
+        <li> +45 pts: Create a multi-scale, sliding window object
+          detector. </li>
+        <li> +20 pts: Writeup with design decisions and evaluation.</li>
+        <li> +15 pts: Extra credit (up to 15 points) </li>
+      </ul>
+      <h2><br>
+      </h2>
+      <h2> Advice, Tips<br>
+      </h2>
+      <p> </p>
+      <ul>
+        <li>Read the comments in the provided code.</li>
+        <li>The starter code has more specific advice about the
+          necessary structure of variables through the code. However,
+          the design of the functions is left up to you. You may want to
+          create some additional functions to help abstract away the
+          complexity of sampling training data and running the detector.
+        </li>
+        <li>You are free to play with any parameters.&nbsp; To give a
+          starting point, HoG cell sizes of 6 are reasonable.&nbsp;
+          Positive patch sizes of 36 x 36 pixels (as given in the code)
+          are reasonable.&nbsp; Negative patch sizes of 36 x 36, 48 x
+          48, 72 x 72, sampled with step sizes of 48 are reasonable as a
+          starting point. <br>
+        </li>
+        <li>On the test images from our classroom (in
+          extra_test_scenes/), we found a step size (window shift
+          amount) of 3 pixels to work well.<br>
+        </li>
+        <li>You probably don't want to run non-max suppression while
+          mining hard-negatives (extra credit).</li>
+        <li>While the idea of mining for hard negatives is ubiquitous in
+          the object detection literature, on this testbed it may only
+          modestly increase your performance when compared to a similar
+          number of random negatives.</li>
+        <li>The parameters of the learning algorithms are important. The
+          regularization parameter <code>lambda</code> is important for
+          training your linear SVM. It controls the amount of bias in
+          the model, and thus the degree of underfitting or overfitting
+          to the training data. Experiment to find its best value.</li>
+        <li>Your classifiers, especially if they are trained with large
+          amounts of negative data, may "underdetect" because of an
+          overly conservative threshold. You can lower the thresholds on
+          your classifiers to improve your average precision. The
+          precision-recall metric does not penalize a detector for
+          producing false positives, as long as those false positives
+          have lower confidence than true positives. For example, an
+          otherwise accurate detector might only achieve 50% recall on
+          the test set with 1000 detections. If you lower the threshold
+          for a positive detection to achieve 70% recall with 5000
+          detections your average precision will increase, even though
+          you are returning mostly false positives.</li>
+        <li>When coding <code>run_detector.m</code>, you will need to
+          decide on some important parameters. (1) The step size. By
+          default, this should simply be the pixel width of your HoG
+          cells. That is, you should step one HoG cell at a time while
+          running your detector over a HoG image. However, you will get
+          better performance if you use a fine step size. You can do
+          this by computing HoG features on shifted versions of your
+          image. This is not required, though -- you can get very good
+          performance with sampling steps of 4 or 6 pixels. (2) The step
+          size across scales, e.g. how much you downsample the image. A
+          value of 0.7 (the image is downsampled to 70% of it's previous
+          size recursively) works well enough for debugging, but finer
+          search with a value such as 0.9 will improve performance.
+          However, making the search finer scale will slow down your
+          detector considerably.</li>
+        <li>Likewise your accuracy is likely to increase as you use more
+          of the training data, but this will slow down your training.
+          You can debug your system with smaller amounts of training
+          data (e.g. all positive examples and 10000 negative examples).</li>
+        <li>You can train and test a classifier with average precision
+          of 0.85 in about 60 seconds. It is alright if your training
+          and testing is slower, though.&nbsp; 5-10 minutes is not
+          unreasonable.<br>
+        </li>
+        <li>The Viola-Jones algorithm achieves an average precision of
+          0.895* on the CMU+MIT test set based on the numbers in Table 3
+          of <a href="https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/viola-cvpr-01.pdf">the
+
+
+
+            paper</a> (This number may be slightly off because Table 3
+          doesn't fully specify the precision-recall curve, because the
+          overlap criteria for VJ might not match our overlap criteria,
+          and because the test sets might be slightly different -- VJ
+          says the test set contains 507 faces, whereas we count 511
+          faces). You can beat this number, although you may need to run
+          the detector at very small step sizes and scales. We have
+          achieved Average Precisions around 0.93.</li>
+      </ul>
+      <p></p>
+      <h2> Credits </h2>
+      <p style="color: #666;"><font color="#000000">This project was<a href="http://www.cc.gatech.edu/~hays/compvision/proj5/">
+            originally created by Prof. James Hays </a>of Georgia Tech,
+          who kindly gave us permission to use his project description
+          and code.&nbsp;&nbsp; Figures in this handout are from </font><a href="http://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf">Dalal
+
+
+
+          and Triggs</a>.&nbsp;<font color="#000000"> Thanks also to
+          Chao-Yeh Chen and Kapil Krishnakumar for performing trial runs
+          of the assignment.</font><br>
+      </p>
+      <center> <br>
+        <table width="100%" cellspacing="2" cellpadding="2" border="1">
+          <tbody>
+            <tr>
+              <td valign="top"><img src="./Assignment 5_ Face detection_files/easy1.jpg" alt="easy" width="726" height="544"><br>
+              </td>
+              <td valign="top"><img src="./Assignment 5_ Face detection_files/easy2.jpg" alt="easy" width="718" height="546"><br>
+              </td>
+            </tr>
+            <tr align="center">
+              <td rowspan="1" colspan="2" valign="top">
+                <p style="margin-top: 0px; margin-left: 1em;
+                  font-family: Georgia, &quot;New Century
+                  Schoolbook&quot;, Times, serif; font-size: 15px;
+                  font-style: normal; font-variant-ligatures: normal;
+                  font-variant-caps: normal; font-weight: 400;
+                  letter-spacing: normal; orphans: 2; text-align:
+                  -webkit-center; text-indent: 0px; text-transform:
+                  none; white-space: normal; widows: 2; word-spacing:
+                  0px; -webkit-text-stroke-width: 0px; background-color:
+                  rgb(255, 255, 255); text-decoration-style: initial;
+                  text-decoration-color: initial; color: rgb(102, 102,
+                  102);"><b>First we tried to make especially easy test
+                    cases with neutral, frontal faces.</b></p>
+              </td>
+            </tr>
+            <tr>
+              <td valign="top"><img src="./Assignment 5_ Face detection_files/IMG_1915_res.jpg" alt="hard" width="720" height="538"><br>
+              </td>
+              <td valign="top"><img src="./Assignment 5_ Face detection_files/hard2.jpg" alt="hard" width="718" height="538"><br>
+              </td>
+            </tr>
+            <tr>
+              <td valign="top"><img src="./Assignment 5_ Face detection_files/hard3.jpg" alt="hard" width="719" height="538"><br>
+              </td>
+              <td valign="top"><img src="./Assignment 5_ Face detection_files/hard4.jpg" alt="hard" width="721" height="538"><br>
+              </td>
+            </tr>
+            <tr align="center">
+              <td rowspan="1" colspan="2" valign="top"><b><span style="color: rgb(102, 102, 102); font-family:
+                    Georgia, &quot;New Century Schoolbook&quot;, Times,
+                    serif; font-size: 15px; font-style: normal;
+                    font-variant-ligatures: normal; font-variant-caps:
+                    normal; font-weight: 400; letter-spacing: normal;
+                    orphans: 2; text-align: -webkit-center; text-indent:
+                    0px; text-transform: none; white-space: normal;
+                    widows: 2; word-spacing: 0px;
+                    -webkit-text-stroke-width: 0px; background-color:
+                    rgb(255, 255, 255); text-decoration-style: initial;
+                    text-decoration-color: initial; display: inline
+                    !important; float: none;">Then the CS 376 class
+                    demonstrates<span>&nbsp;</span></span></b><a href="http://en.wikipedia.org/wiki/How_Not_to_Be_Seen" style="text-decoration: none; color: rgb(153, 0, 0);
+                  font-family: Georgia,&quot;New Century
+                  Schoolbook&quot;,Times,serif; font-size: 15px;
+                  font-style: normal; font-variant-ligatures: normal;
+                  font-variant-caps: normal; letter-spacing: normal;
+                  text-indent: 0px; text-transform: none; white-space:
+                  normal; word-spacing: 0px; -webkit-text-stroke-width:
+                  0px; background-color: rgb(255, 255, 255);">how not to
+                  be seen</a><b><span style="color: rgb(102, 102, 102);
+                    font-family: Georgia, &quot;New Century
+                    Schoolbook&quot;, Times, serif; font-size: 15px;
+                    font-style: normal; font-variant-ligatures: normal;
+                    font-variant-caps: normal; font-weight: 400;
+                    letter-spacing: normal; orphans: 2; text-align:
+                    -webkit-center; text-indent: 0px; text-transform:
+                    none; white-space: normal; widows: 2; word-spacing:
+                    0px; -webkit-text-stroke-width: 0px;
+                    background-color: rgb(255, 255, 255);
+                    text-decoration-style: initial;
+                    text-decoration-color: initial; display: inline
+                    !important; float: none;"><span>&nbsp;</span>by a
+                    robot.</span></b></td>
+            </tr>
+            <tr>
+              <td valign="top"><br>
+              </td>
+              <td valign="top"><br>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <br>
+        <br>
+      </center>
+    </div>
+  
+
+<audio controls="controls" style="display: none;"></audio><iframe frameborder="0" scrolling="no" style="background-color: transparent; border: 0px; display: none;" src="./Assignment 5_ Face detection_files/saved_resource.html"></iframe><div id="GOOGLE_INPUT_CHEXT_FLAG" style="display: none;" input="" input_stat="{&quot;tlang&quot;:true,&quot;tsbc&quot;:true,&quot;pun&quot;:true,&quot;mk&quot;:true,&quot;ss&quot;:true}"></div></body><style type="text/css">#yddContainer{display:block;font-family:Microsoft YaHei;position:relative;width:100%;height:100%;top:-4px;left:-4px;font-size:12px;border:1px solid}#yddTop{display:block;height:22px}#yddTopBorderlr{display:block;position:static;height:17px;padding:2px 28px;line-height:17px;font-size:12px;color:#5079bb;font-weight:bold;border-style:none solid;border-width:1px}#yddTopBorderlr .ydd-sp{position:absolute;top:2px;height:0;overflow:hidden}.ydd-icon{left:5px;width:17px;padding:0px 0px 0px 0px;padding-top:17px;background-position:-16px -44px}.ydd-close{right:5px;width:16px;padding-top:16px;background-position:left -44px}#yddKeyTitle{float:left;text-decoration:none}#yddMiddle{display:block;margin-bottom:10px}.ydd-tabs{display:block;margin:5px 0;padding:0 5px;height:18px;border-bottom:1px solid}.ydd-tab{display:block;float:left;height:18px;margin:0 5px -1px 0;padding:0 4px;line-height:18px;border:1px solid;border-bottom:none}.ydd-trans-container{display:block;line-height:160%}.ydd-trans-container a{text-decoration:none;}#yddBottom{position:absolute;bottom:0;left:0;width:100%;height:22px;line-height:22px;overflow:hidden;background-position:left -22px}.ydd-padding010{padding:0 10px}#yddWrapper{color:#252525;z-index:10001;background:url(chrome-extension://eopjamdnofihpioajgfdikhhbobonhbb/ab20.png);}#yddContainer{background:#fff;border-color:#4b7598}#yddTopBorderlr{border-color:#f0f8fc}#yddWrapper .ydd-sp{background-image:url(chrome-extension://eopjamdnofihpioajgfdikhhbobonhbb/ydd-sprite.png)}#yddWrapper a,#yddWrapper a:hover,#yddWrapper a:visited{color:#50799b}#yddWrapper .ydd-tabs{color:#959595}.ydd-tabs,.ydd-tab{background:#fff;border-color:#d5e7f3}#yddBottom{color:#363636}#yddWrapper{min-width:250px;max-width:400px;}</style></html>
