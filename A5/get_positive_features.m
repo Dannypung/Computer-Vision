@@ -30,11 +30,12 @@ function features_pos = get_positive_features(train_path_pos, feature_params)
 
 image_files = dir( fullfile( train_path_pos, '*.jpg') ); %Caltech Faces stored as .jpg
 num_images = length(image_files);
-features_pos = zeros(num_images,(feature_params.template_size / ...
+features_pos = zeros(num_images,fix(feature_params.template_size / ...
     feature_params.hog_cell_size)^2 * 31);
+
 for i=1:num_images
     IM = im2single(imread([train_path_pos '/' image_files(i).name]));
     HOG = vl_hog(IM, feature_params.hog_cell_size);
-    features_pos(i,:)= reshape(HOG,1,(feature_params.template_size / ...
+    features_pos(i,:)= reshape(HOG,1,fix(feature_params.template_size /...
         feature_params.hog_cell_size)^2 * 31);
 end

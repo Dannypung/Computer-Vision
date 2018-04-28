@@ -77,8 +77,7 @@ lambda = 0.0001;
 X = [features_pos;features_neg]';
 y = [ones(size(features_pos,1),1); -1*ones(size(features_neg,1),1)];
 [w b] = vl_svmtrain(X, y, lambda);
-%disp(size(w));
-disp(b);
+
 
 %% step 3. Examine learned classifier
 % You don't need to modify anything in this section. The section first

@@ -35,7 +35,7 @@ function features_neg = get_random_negative_features(non_face_scn_path, feature_
 image_files = dir( fullfile( non_face_scn_path, '*.jpg' ));
 num_images = length(image_files);
 cropPerImage = ceil(num_samples/num_images);
-features_neg = zeros(cropPerImage*num_images,(...
+features_neg = zeros(cropPerImage*num_images,fix(...
     feature_params.template_size / feature_params.hog_cell_size)^2 * 31);
 features_neg_index = 1;
 for i=1:num_images
