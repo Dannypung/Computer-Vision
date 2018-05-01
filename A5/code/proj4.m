@@ -164,7 +164,7 @@ end
 % for testing on extra images (it is commented out below).
 
 % Don't modify anything in 'evaluate_detections'!
-% [gt_ids, gt_bboxes, gt_isclaimed, tp, fp, duplicate_detections] = ...
+[gt_ids, gt_bboxes, gt_isclaimed, tp, fp, duplicate_detections] = ...
 evaluate_detections(bboxes, confidences, image_ids, label_path);
 
 visualize_detections_by_image(bboxes, confidences, image_ids, tp, fp, test_scn_path, label_path)
