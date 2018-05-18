@@ -3,7 +3,7 @@
 
 ## A1 - Content-aware image resizing (Seam Carving algorithm) 
 
-## A2 - Image segmentation with k-means & Circle detention with Hough Transform 
+## A2 - Image segmentation with k-means & Circle Detection with Hough Transform 
 
 ## A3 - Image mosaics 
 
